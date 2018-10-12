@@ -1,0 +1,25 @@
+.a{
+    /*margin:auto;*/
+    width: 100%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+ 
+table  caption{
+    /*color: blue;*/
+    font: 34px consolas bold;
+}
+ 
+.a th {
+    border: 1px solid black;
+    text-align:center;
+}
+.a td {
+    border: 1px solid black;
+    text-align:center;
+}
+ 
+.a th {
+    font: 20px consolas bold;
+    /*background-color: gray;*/
+}

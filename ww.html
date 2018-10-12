@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Directions service</title>
+    <style>
+        #map {
+            height: 100%;
+        }
+        /* Optional: Makes the sample page fill the window. */
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 25%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto', 'sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+
+
+<body>
+<div id="floating-panel">
+    <div id="newPosition">
+        实时位置
+    </div>
+    <div id="start">
+        路线回放
+    </div>
+    <div id="end">
+        路线记录
+    </div>
+</div>
+<div id="map"></div>
+<script>
+    var markers = [],
+        lineView = [],
+        routerLog = []; //记录点清除点
+    var times;
+    var driveLog = []; //记录行驶路线
+    var map;
+
+
+    function initMap() {
+        var directionsService = new google.maps.DirectionsService;
+        var directionsDisplay = new google.maps.DirectionsRenderer;
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 7,
+            center: {
+                lat: 41.878108915496114,
+                lng: -87.62967824935913
+            }
+        });
+        directionsDisplay.setMap(map);
+        var locations = [{
+            lat: 41.83273506215261,
+            lng: -87.67501831054688
+        },
+            {
+                lat: 41.802542590364354,
+                lng: -87.78007507324219
+            },
+            {
+                lat: 41.79691191119474,
+                lng: -87.80342102050781
+            },
+            {
+                lat: 41.79384042311992,
+                lng: -87.81784057617188
+            },
+            {
+                lat: 41.780528940578975,
+                lng: -87.83294677734375
+            },
+            {
+                lat: 41.769007157585534,
+                lng: -87.84873962402344
+            },
+            {
+                lat: 41.77899282243318,
+                lng: -87.8353500366211
+            },
+            {
+                lat: 41.76823896512855,
+                lng: -87.84461975097656
+            },
+            {
+                lat: 41.761837003596426,
+                lng: -87.85114288330078
+            },
+            {
+                lat: 41.7613248190782,
+                lng: -87.86178588867188
+            },
+            {
+                lat: 41.75953214107035,
+                lng: -87.8851318359375
+            },
+            {
+                lat: 41.76106872528616,
+                lng: -87.90882110595703
+            },
+            {
+                lat: 41.75287318430239,
+                lng: -87.9287338256836
+            },
+            {
+                lat: 41.73980937778113,
+                lng: -87.95242309570312
+            },
+            {
+                lat: 41.70982942509964,
+                lng: -88.0228042602539
+            },
+            {
+                lat: 41.62262881463783,
+                lng: -88.15704345703125
+            },
+            {
+                lat: 41.513719082873486,
+                lng: -88.20236206054688
+            },
+            {
+                lat: 41.395354710280166,
+                lng: -88.20098876953125
+            },
+            {
+                lat: 41.31804421232398,
+                lng: -88.19961547851562
+            },
+            {
+                lat: 41.18692242290296,
+                lng: -88.30673217773438
+            },
+            {
+                lat: 41.01513821521512,
+                lng: -88.52096557617188
+            },
+            {
+                lat: 40.799256620052276,
+                lng: -88.7091064453125
+            },
+            {
+                lat: 40.53572049118792,
+                lng: -89.03182983398438
+            },
+            {
+                lat: 40.12849105685408,
+                lng: -89.43145751953125
+            },
+            {
+                lat: 38.71123253895224,
+                lng: -89.96841430664062
+            },
+            {
+                lat: 38.613651383524335,
+                lng: -90.1812744140625
+            },
+            {
+                lat: 38.626727999019884,
+                lng: -90.1980972290039
+            }
+        ]
+
+
+        //展示起始终点路线
+        var onChangeHandler = function() {
+            calculateAndDisplayRoute(directionsService, directionsDisplay);
+        };
+        onChangeHandler();
+
+
+        //路线记录
+        var onChangeHandlers = function() {
+            driveLogs();
+            console.log(routerLog)
+        };
+        document.getElementById('end').onclick = function() {
+            onChangeHandlers()
+        };
+
+
+        //路线回放
+        var onChangeHandlerss = function() {
+            routerView();
+        };
+        document.getElementById('start').onclick = function() {
+            onChangeHandlerss()
+        };
+
+
+        //实时位置
+        document.getElementById('newPosition').onclick = function() {
+            var ii = 0;
+            setMapOnAll(null);
+            setMapLineAll(null, routerLog);
+            setMapLineAll(null, lineView);
+            clearInterval(times);
+            driveLog = [];
+            lineView = [];
+            routerLog = []
+            times = setInterval(function() {
+                setMapOnAll(null);
+                addMarker(locations[ii], map)
+                driveLog.push(locations[ii]);
+                ii++;
+                if(ii > locations.length - 1) {
+                    clearInterval(times)
+                }
+            }, 500);
+        };
+
+
+    }
+
+
+    //路线回放
+    function routerView() {
+        var lineSymbol = {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 6,
+            strokeColor: 'red'
+        };
+
+
+        // Create the polyline and add the symbol to it via the 'icons' property.
+        var line = new google.maps.Polyline({
+            path: driveLog,
+            icons: [{
+                icon: lineSymbol,
+                offset: '100%'
+            }],
+            map: map
+        });
+        setMapLineAll(null, lineView);
+        lineView.push(line);
+        animateCircle(line);
+    }
+
+
+    function animateCircle(line) {
+        var count = 0;
+        var lineTimes = setInterval(function() {
+            count = (count + 1) % 200;
+
+
+            var icons = line.get('icons');
+            icons[0].offset = (count / 2) + '%';
+            if(count / 2 == 0) {
+                clearInterval(lineTimes)
+                line.setMap(null);
+            }
+            line.set('icons', icons);
+        }, 20);
+    }
+
+
+    //行驶路线记录
+    function driveLogs() {
+        var flightPath = new google.maps.Polyline({
+            path: driveLog,
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+        setMapLineAll(null, routerLog);
+        routerLog.push(flightPath);
+        flightPath.setMap(map);
+    }
+
+
+    //起始终点路线
+    function calculateAndDisplayRoute(directionsService, directionsDisplay) {
+        directionsService.route({
+            origin: {
+                lat: 41.83273506215261,
+                lng: -87.67501831054688
+            },
+            destination: {
+                lat: 38.626727999019884,
+                lng: -90.1980972290039
+            },
+            travelMode: 'DRIVING'
+        }, function(response, status) {
+            if(status === 'OK') {
+                directionsDisplay.setDirections(response);
+            } else {
+                window.alert('Directions request failed due to ' + status);
+            }
+        });
+    }
+
+
+    //向地图上添加某地标识
+    function addMarker(location, map) {
+        var marker = new google.maps.Marker({
+            position: location,
+            'draggable': false,
+            map: map,
+            icon: './img/car.png'
+        });
+        markers.push(marker);
+        var contentString = '<div id="content">' +
+            '<div id="siteNotice">' +
+            '弹框信息' +
+            '</div></div>';
+
+
+        var infowindow = new google.maps.InfoWindow({
+            content: contentString
+        });
+        google.maps.event.addListener(marker, 'click', function() {
+            infowindow.open(map, marker);
+        });
+    }
+
+
+    //重置点
+    function setMapOnAll(map, arrs) {
+        for(var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
+    }
+
+
+    //重置回放、路线记录
+    function setMapLineAll(map, arrs) {
+        for(var i = 0; i < arrs.length; i++) {
+            arrs[i].setMap(map);
+        }
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap">
+</script>
+</body>
+
+
+</html>
