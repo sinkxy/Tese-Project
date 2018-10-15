@@ -6,7 +6,8 @@
 			<!--<el-menu-item index="/pages/openlayer/openlayer0"><i class="fa fa-map"></i>openlayers简单测试</el-menu-item>-->
 			<!--<el-menu-item index="/pages/openlayer/openlayer1"><i class="fa fa-map"></i>openlayers测试</el-menu-item>-->
 			<el-menu-item index="/pages/test/gdt"><i class="fa fa-map"></i>滚动条</el-menu-item>
-			<el-menu-item index="/pages/test/jdhtml"><i class="fa fa-map"></i>原生html</el-menu-item>
+			<el-menu-item index="/pages/test/select_biddata"><i class="fa fa-map"></i>大数据的下拉框</el-menu-item>
+			<el-menu-item index="/pages/test/gffl"><i class="fa fa-map"></i>官方范例</el-menu-item>
 		</el-menu>
 </template>
 <script>
