@@ -15,6 +15,14 @@
 
 ``` bash
 npm install
+包的安装顺序导致的。
+1.vue  [即cnpm install vue@2.5.13]
+2.vue-router
+3.vuex
+4.axios
+5.element-ui
+6.cnpm install [安装剩下的]
+
 ```
 
 ## Develop
